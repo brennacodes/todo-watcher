@@ -35,7 +35,7 @@ function watch({ todosDir = DEFAULT_TODOS_DIR, session, onComplete, onChange } =
 
   const watcher = fs.watch(todosDir, { persistent: true }, (eventType, filename) => {
     if (!filename || !filename.endsWith('.json')) return;
-    if (session && filename !== `${session}.json`) return;
+    if (session && !filename.startsWith(session)) return;
 
     if (debounceTimers.has(filename)) clearTimeout(debounceTimers.get(filename));
 

@@ -188,18 +188,21 @@ describe('watch', () => {
 
   it('ignores other sessions when --session is set', (t, done) => {
     const dir = fs.mkdtempSync(path.join(tmpDir, 'test-'));
+    const targetId = 'fc0848b4-bc79-4388-974e-f8da71d1b47e';
+    const otherId = 'aabbccdd-1234-5678-abcd-000000000000';
     let called = false;
 
     watcher = watch({
       todosDir: dir,
-      session: 'target-session',
+      session: targetId,
       onComplete() { called = true; },
     });
 
     // Write to a different session — should be ignored
-    fs.writeFileSync(path.join(dir, 'other-session.json'), JSON.stringify([
-      { content: 'task', status: 'completed' },
-    ]));
+    fs.writeFileSync(
+      path.join(dir, `${otherId}-agent-${otherId}.json`),
+      JSON.stringify([{ content: 'task', status: 'completed' }])
+    );
 
     setTimeout(() => {
       assert.equal(called, false);
@@ -209,19 +212,22 @@ describe('watch', () => {
 
   it('fires when the correct session completes', (t, done) => {
     const dir = fs.mkdtempSync(path.join(tmpDir, 'test-'));
+    const sessionId = 'fc0848b4-bc79-4388-974e-f8da71d1b47e';
+    const filename = `${sessionId}-agent-${sessionId}.json`;
 
     watcher = watch({
       todosDir: dir,
-      session: 'target-session',
-      onComplete({ sessionId }) {
-        assert.equal(sessionId, 'target-session');
+      session: sessionId,
+      onComplete({ sessionId: id }) {
+        assert.ok(id.startsWith(sessionId));
         done();
       },
     });
 
-    fs.writeFileSync(path.join(dir, 'target-session.json'), JSON.stringify([
-      { content: 'task', status: 'completed' },
-    ]));
+    fs.writeFileSync(
+      path.join(dir, filename),
+      JSON.stringify([{ content: 'task', status: 'completed' }])
+    );
   });
 
   it('ignores non-JSON files', (t, done) => {
